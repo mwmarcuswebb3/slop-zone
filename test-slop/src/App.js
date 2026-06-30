@@ -465,7 +465,7 @@ function PostActions({ post, theme, onUpdate, myReacted, onReact }) {
     setBusy(false);
   };
 
-  const totalReactions = Object.values(reactions).reduce((a, b) => a + b, 0);
+  
 
   return (
     <div style={{ borderTop: `1px solid ${T.isXP ? "#ACA899" : T.dim}` }}>
@@ -1018,14 +1018,14 @@ export default function App() {
 
   const modalEl = modal && (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={closeModal}>
-      <div style={{ background: T.modalBg, padding: 0, width: "100%", maxWidth: 460, border: T.modalBorder, ...(T.isXP ? { borderRadius: "8px 8px 4px 4px", overflow: "hidden" } : { borderRadius: T.cardRadius }) }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: T.modalBg, padding: 0, width: "100%", maxWidth: 460, maxHeight: "90vh", display: "flex", flexDirection: "column", border: T.modalBorder, ...(T.isXP ? { borderRadius: "8px 8px 4px 4px", overflow: "hidden" } : { borderRadius: T.cardRadius }) }} onClick={e => e.stopPropagation()}>
         {T.isXP && (
           <div style={{ background: "linear-gradient(to bottom,#1B6FCC 0%,#3D9BF0 8%,#0D5DB0 100%)", padding: "4px 6px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 28 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, color: "white", fontFamily: "'Tahoma',sans-serif", fontSize: 12, fontWeight: "bold" }}>✏️ {T.modalTitle}</div>
             <div onClick={closeModal} style={{ width: 21, height: 21, borderRadius: 3, border: "1px solid rgba(0,0,0,0.4)", background: "linear-gradient(to bottom,#e05050,#b02020)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, cursor: "pointer" }}>✕</div>
           </div>
         )}
-        <div style={{ padding: 28 }}>
+        <div style={{ padding: 28, overflowY: "auto", flex: 1 }}>
           {!T.isXP && (
             <h2 style={{ fontFamily: T.logoFont, fontSize: theme === "y2k" ? "1.7rem" : "1.9rem", color: T.accent, margin: "0 0 16px", letterSpacing: "1px", ...(theme === "y2k" ? T.logoGlow : {}) }}>{T.modalTitle}</h2>
           )}
@@ -1119,7 +1119,7 @@ export default function App() {
           <div style={{ marginTop: 12 }}>
             {img ? (
               <div style={{ position: "relative" }}>
-                <img src={img} alt="preview" style={{ width: "100%", borderRadius: T.cardRadius, display: "block" }} />
+                <img src={img} alt="preview" style={{ width: "100%", maxHeight: 280, objectFit: "contain", borderRadius: T.cardRadius, display: "block" }} />
                 <button onClick={() => setImg(null)} style={{ position: "absolute", top: 8, right: 8, background: T.err, border: "none", color: "#fff", width: 28, height: 28, borderRadius: theme === "dark" ? "50%" : 0, cursor: "pointer", fontSize: 18, lineHeight: "28px", padding: 0 }}>×</button>
               </div>
             ) : (
