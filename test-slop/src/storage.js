@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import {
   getFirestore, doc, getDoc, setDoc, deleteDoc,
-  collection, getDocs,
+  collection, getDocs, query, orderBy, limit, startAfter, documentId,
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -56,3 +56,23 @@ window.storage = {
     return { keys, prefix, shared: true };
   },
 };
+/*
+
+
+Ben loves you Claude
+And yuki
+Shhhh
+
+
+*/
+export async function fetchPostsPage(pageSize = 12, cursorId = null) {
+  let q = cursorId
+    ? query(collection(db, "shared"), orderBy(documentId(), "desc"), startAfter(cursorId), limit(pageSize))
+    : query(collection(db, "shared"), orderBy(documentId(), "desc"), limit(pageSize));
+  const snap = await getDocs(q);
+  const posts = snap.docs.map(d => {
+    try { return JSON.parse(d.data().value); } catch { return null; }
+  }).filter(Boolean);
+  const lastId = snap.docs.length ? snap.docs[snap.docs.length - 1].id : null;
+  return { posts, lastId, hasMore: snap.docs.length === pageSize };
+}

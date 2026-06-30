@@ -1,4 +1,5 @@
 import './storage';
+import { fetchPostsPage } from './storage';
 import { useState, useEffect, useRef, useCallback } from "react";
 
 const PAGE = 12;
@@ -127,6 +128,47 @@ const formatSize = (str) => {
   if (bytes < 1024) return `${bytes} B`;
   return `${(bytes / 1024).toFixed(1)} KB`;
 };
+
+function Collapsible({ children, theme }) {
+  const T = THEMES[theme];
+  const ref = useRef();
+  const [overflowing, setOverflowing] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const limit = window.innerHeight * 0.5;
+    setOverflowing(el.scrollHeight > limit);
+  }, [children]);
+
+  return (
+    <div style={{ position: "relative" }}>
+      <div
+        ref={ref}
+        style={{
+          maxHeight: expanded || !overflowing ? "none" : "50vh",
+          overflow: "hidden",
+        }}
+      >
+        {children}
+      </div>
+      {overflowing && !expanded && (
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0, height: 60,
+          background: `linear-gradient(transparent, ${T.cardBg})`,
+          display: "flex", alignItems: "flex-end", justifyContent: "center", paddingBottom: 6,
+        }}>
+          <button onClick={() => setExpanded(true)} style={{
+            background: T.accent, color: T.accentText, border: "none",
+            borderRadius: 20, padding: "4px 14px", fontSize: "0.72rem",
+            cursor: "pointer", fontFamily: T.bodyFont,
+          }}>show more ▾</button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Dark theme background presets ───────────────────────────────────────────
 const DARK_BGS = [
@@ -660,8 +702,7 @@ export default function App() {
   const bgVideoFileRef = useRef();
   const videoBgRef = useRef();
   const sentinelRef = useRef();
-  const allKeysRef = useRef([]);
-  const offsetRef = useRef(0);
+  const cursorRef = useRef(null);
   const hasMoreRef = useRef(false);
   const loadingMoreRef = useRef(false);
 
@@ -751,16 +792,11 @@ export default function App() {
   async function init() {
     setLoading(true);
     try {
-      const list = await window.storage.list("slop:", true);
-      if (list?.keys?.length) {
-        const sorted = [...list.keys].sort((a, b) => parseInt(b.split(":")[1]) - parseInt(a.split(":")[1]));
-        allKeysRef.current = sorted;
-        const data = await fetchBatch(sorted.slice(0, PAGE));
-        setPosts(data);
-        offsetRef.current = PAGE;
-        hasMoreRef.current = sorted.length > PAGE;
-        setHasMore(sorted.length > PAGE);
-      }
+      const { posts: data, lastId, hasMore: more } = await fetchPostsPage(PAGE, null);
+      setPosts(data);
+      cursorRef.current = lastId;
+      hasMoreRef.current = more;
+      setHasMore(more);
     } catch (e) { console.error(e); }
     setLoading(false);
   }
@@ -768,12 +804,10 @@ export default function App() {
   async function loadMore() {
     if (loadingMoreRef.current || !hasMoreRef.current) return;
     loadingMoreRef.current = true; setLoadingMore(true);
-    const batch = allKeysRef.current.slice(offsetRef.current, offsetRef.current + PAGE);
     try {
-      const data = await fetchBatch(batch);
+      const { posts: data, lastId, hasMore: more } = await fetchPostsPage(PAGE, cursorRef.current);
       setPosts(p => [...p, ...data]);
-      offsetRef.current += PAGE;
-      const more = offsetRef.current < allKeysRef.current.length;
+      cursorRef.current = lastId;
       hasMoreRef.current = more; setHasMore(more);
     } catch (e) { console.error(e); }
     loadingMoreRef.current = false; setLoadingMore(false);
@@ -820,8 +854,6 @@ export default function App() {
 
     try {
       await trySave(0);
-      allKeysRef.current = [`slop:${post.id}`, ...allKeysRef.current];
-      offsetRef.current += 1;
       setPosts(p => [post, ...p]);
       setText(""); setImg(null); setModal(false); setPostType("meme"); setQuoteAuthor("");
 
@@ -947,6 +979,7 @@ export default function App() {
           ...(isByuan ? { boxShadow: "0 0 20px 3px rgba(255,0,90,0.6)" } : {}),
         }}
       >
+        <Collapsible theme={theme}>
         {pType === "code" ? (
           <div style={{ background: "#1e1e1e" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", background: "#2d2d2d", borderBottom: "1px solid #383838" }}>
@@ -971,6 +1004,7 @@ export default function App() {
             )}
           </>
         )}
+        </Collapsible>
         <div style={{ padding: "5px 14px 8px", fontSize: "0.69rem", color: T.dim, fontFamily: T.bodyFont }}>
           {p.username || T.postLabel} · {ago(p.ts)}
         </div>
