@@ -996,12 +996,12 @@ export default function App() {
           </div>
         ) : (
           <>
-            {p.img && <img src={p.img} alt="" style={{ width: "100%", maxHeight: 480, objectFit: "contain", display: "block" }} />}
             {p.text && (
-              <p style={{ margin: 0, padding: p.img ? "11px 14px 6px" : "14px 14px 6px", fontSize: "0.93rem", lineHeight: 1.65, color: T.subText, whiteSpace: "pre-wrap", wordBreak: "break-word", fontFamily: T.bodyFont }}>
+              <p style={{ margin: 0, padding: "14px 14px 6px", fontSize: "0.93rem", lineHeight: 1.65, color: T.subText, whiteSpace: "pre-wrap", wordBreak: "break-word", fontFamily: T.bodyFont }}>
                 {p.text}
               </p>
             )}
+            {p.img && <img src={p.img} alt="" style={{ width: "100%", maxHeight: 480, objectFit: "contain", display: "block", marginTop: p.text ? 8 : 0 }} />}
           </>
         )}
         </Collapsible>
